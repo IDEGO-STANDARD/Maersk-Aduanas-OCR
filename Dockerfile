@@ -1,5 +1,5 @@
 # start by pulling the python image
-FROM python:3-alpine3.9
+FROM python:3.11-alpine
 RUN apk add --no-cache py3-numpy
 
 # copy the requirements file into the image
