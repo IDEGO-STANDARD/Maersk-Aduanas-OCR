@@ -18,7 +18,7 @@ nltk.download('punkt')
 output_folder = '/app'
 
 # Cargar el modelo entrenado
-model = tf.keras.models.load_model('documento_classifier_model.h5')
+model = tf.keras.models.load_model('documento_classifier_model 1.h5')
 
 
 # Funciones clasificador
