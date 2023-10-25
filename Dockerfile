@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM python:3.7-alpine
 RUN apk update
 RUN apk add py-pip
 RUN apk add --no-cache python3-dev 
