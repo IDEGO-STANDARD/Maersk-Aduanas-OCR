@@ -1,5 +1,5 @@
 # start by pulling the python image
-FROM python:3.8-alpine
+FROM python:3.9-alpine
 
 # copy the requirements file into the image
 COPY ./requirements.txt /app/requirements.txt
@@ -9,9 +9,6 @@ WORKDIR /app
 
 # update pip
 RUN python -m pip install --upgrade pip
-
-# install numpy
-RUN pip install numpy
 
 # install the dependencies and packages in the requirements file
 RUN pip install -r requirements.txt
