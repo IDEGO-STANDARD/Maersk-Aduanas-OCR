@@ -10,6 +10,9 @@ WORKDIR /app
 # update pip
 RUN python -m pip install --upgrade pip
 
+# install numpy
+RUN pip install numpy
+
 # install the dependencies and packages in the requirements file
 RUN pip install -r requirements.txt
 
