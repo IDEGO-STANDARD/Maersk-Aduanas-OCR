@@ -1,13 +1,9 @@
 # start by pulling the python image
-FROM python:3.11-alpine3.18
+FROM python:3-alpine3.9
+RUN apk add --no-cache py3-numpy
 
 # copy the requirements file into the image
 COPY ./requirements.txt /app/requirements.txt
-
-# add the dependencies to the image
-RUN apk add --no-cache --update \
-    python3 python3-dev gcc \
-    gfortran musl-dev
 
 # switch working directory
 WORKDIR /app
