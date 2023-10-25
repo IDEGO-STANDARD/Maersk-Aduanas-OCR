@@ -1,0 +1,49 @@
+name: CI/CD for Express API
+
+on:
+  push:
+    branches:
+      - demo
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login via Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: aduanasocrdev.azurecr.io
+          username: aduanasocrdev
+          password: 6Uye1gW6bKDPYmuNPCjNrKVd7c9xysCd6Zwxbn+Kev+ACRDvtdQk
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t aduanasocrdev.azurecr.io/ocr .
+          docker push aduanasocrdev.azurecr.io/ocr
+        env:
+          ACR_SERVER: aduanasocrdev.azurecr.io
+
+      - name: Update Azure Container Instance
+        uses: azure/aci-deploy@v1
+        with:
+          resource-group: PROYECTO_ADUANAS_DEV
+          dns-name-label: aduanasocrdev
+          image: aduanasocrdev.azurecr.io/ocr:latest
+          cpu: 1
+          memory: 1
+          registry-username: aduanasocrdev
+          registry-password: 6Uye1gW6bKDPYmuNPCjNrKVd7c9xysCd6Zwxbn+Kev+ACRDvtdQk
+          name: aduanasocrdev
+          location: brazilsouth
+
+      - name: Deploy Complete
+        run: echo "Deployment successful!"
