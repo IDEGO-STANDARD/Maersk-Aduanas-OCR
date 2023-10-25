@@ -7,6 +7,9 @@ COPY ./requirements.txt /app/requirements.txt
 # switch working directory
 WORKDIR /app
 
+# update pip
+RUN pip install --upgrade pip
+
 # install the dependencies and packages in the requirements file
 RUN pip install -r requirements.txt
 
