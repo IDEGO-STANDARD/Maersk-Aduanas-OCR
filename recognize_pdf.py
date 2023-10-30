@@ -18,8 +18,11 @@ app = Flask(__name__)
 
 nltk.download('punkt')
 
+current_directory = os.getcwd()
+
+
 # Cargar el modelo entrenado
-model = tf.keras.models.load_model('C:\\Users\\USER\\Desktop\\demo_ocr\\documento_classifier_model.h5')
+model = tf.keras.models.load_model(current_directory + '\\documento_classifier_model.h5')
 
 # Funciones clasificador
 # Función para redimensionar una imagen a 224x224 píxeles
