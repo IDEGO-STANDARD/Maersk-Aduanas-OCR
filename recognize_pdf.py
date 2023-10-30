@@ -301,6 +301,11 @@ def recognize_pdf():
     except Exception as e:
         print(f"An error occurred: {e}")
         return jsonify({'error': 'An error occurred while processing the file.'}), 500
+    
+
+@app.route("/")
+def hello():
+    return "Hello, World!"
 
 if __name__ == "__main__":
     app.run(debug=True)
