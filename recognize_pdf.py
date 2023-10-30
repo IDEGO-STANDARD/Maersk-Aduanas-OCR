@@ -20,7 +20,7 @@ nltk.download('punkt')
 
 current_directory = os.getcwd()
 
-
+##
 # Cargar el modelo entrenado
 model = tf.keras.models.load_model(current_directory + '\\documento_classifier_model.h5')
 
