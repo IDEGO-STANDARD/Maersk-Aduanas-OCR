@@ -125,7 +125,7 @@ def select_pdf_and_classify(file):
 
 
     pdf_name = file.filename
-    save_path = 'C:\\Users\\USER\\Desktop\\demo_ocr{}'.format(pdf_name)
+    save_path = current_directory + '\\{}'.format(pdf_name)
     file.save(save_path)
 
     # Convertir el PDF en imágenes
