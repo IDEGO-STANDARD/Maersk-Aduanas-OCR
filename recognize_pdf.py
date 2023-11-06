@@ -124,20 +124,36 @@ def procesar_pdf(save_path, pdf_file_name):
 
 # Palabras claves y etiquetas:
 palabras_clave = {
-    'Bill of Lading': 'B/L',
-    'B/L No': 'B/L',
-    'B/LNo.': 'B/L',
-    'BILL OF LADING NO.': 'B/L',
-    'Port of Loading': 'POL',
-    'Port of Discharge': 'POD',
-    'PORT OF LOADING': 'POL',
-    'PORT OF DISCHARGE': 'POD',
+    'Bill of Lading': 'codigoBL',
+    'B/L No': 'codigoBL',
+    'B/LNo.': 'codigoBL',
+    'BILL OF LADING NO.': 'codigoBL',
+    'Weight': 'pesoBruto',
+    'GROSS WEIGHT (KGS)': 'pesoBruto',
+    '000000001x' : 'paisEmbarque',
+    'PORT OF DISCHARGE': 'puertoDescarga',
+    'Port of Discharge': 'puertoDescarga',
+    '000000002x' : 'idOrdenT',
+    '000000003x' : 'codigoAduana',
+    '000000004x' : 'fechaBl',
+    '000000005x' : 'idEstado',
+    'Port of Loading': 'puertoEmbarque',
+    'PORT OF LOADING': 'puertoEmbarque',
+    '000000006x' : 'nroBultos',
+    '000000007x' : 'flete',
+    '000000008x' : 'docFeeOrig',
+    '000000009x' : 'handlingOrig',
+    '000000010x' : 'surcharge',
+    '000000011x' : 'fuelFee',
+    '000000012x' : 'docFeeDestin',
+    '000000013x' : 'handlingDestin',
+    '000000014x' : 'portDues',
+    '000000015x' : 'codigoBLMaster',
+    '000000016x' : 'ETA',
     'Voyage No.' : 'Voyage',
     'VOYAGE NO.' : 'Voyage',
     'Vessel': 'Vessel',
-    'VESSEL' : 'Vessel',
-    'Weight': 'Peso',
-    'GROSS WEIGHT (KGS)': 'Peso'
+    'VESSEL' : 'Vessel'
 }
 
 etiquetas_y_textos = {}
@@ -183,7 +199,6 @@ def select_pdf_and_classify(file):
         # Crear un cursor
         cur = conn.cursor()
 
-        
 
     except psycopg2.OperationalError as e:
         print("Error al conectar a la base de datos:", e)
@@ -208,24 +223,24 @@ def select_pdf_and_classify(file):
 
     # Definir las etiquetas de clase
     class_labels = {
-        0: "BL",
-        1: "CO",
+        0: "Bill Of Lading",
+        1: "Certificado Origen",
         2: "Factura",
-        3: "PL",
+        3: "Packing List",
         4: "Seguro",
         5: "Otros"
     }
 
     # Mostrar el resultado de la clasificación
     result_label = f"El PDF es de tipo: {class_labels[class_label]}"
-    print(result_label)
+    #  print(result_label)
 
     # OCR
     pdf_file_name = pdf_file_name = os.path.basename(save_path)
 
     img1_box, textos_de_cajas, texto = procesar_pdf(save_path, pdf_file_name)
 
-    if class_labels[class_label] == 'BL':
+    if class_labels[class_label] == 'Bill Of Lading':
         for key, texto in textos_de_cajas.items():
             if len(texto) <= 50:
                 etiquetas_encontradas = []  # Lista de etiquetas para este resultado
@@ -251,14 +266,16 @@ def select_pdf_and_classify(file):
             for palabra_clave in palabras_claves_a_eliminar:
                 texto = texto.replace(palabra_clave, '').strip()
 
+            # Comprueba si 'texto' está vacío o es None y asigna "No encontrado" en su lugar
+            if texto is None or texto == "":
+                texto = "No encontrado"
+
             # Imprime las etiquetas y el texto
             etiquetas_str = ', '.join(etiquetas)
 
             resultados = (etiquetas_str, texto)
             resultados_lista.append(resultados)
 
-            # Imprime la tupla de etiquetas y texto
-            print(resultados)
         """
         # Itera a través de las entradas en texto_lista_box
         for key, (etiquetas, coords) in texto_lista_box.items():
@@ -299,14 +316,25 @@ def select_pdf_and_classify(file):
         #    mask_filename = f'{pdf_file_name}_colorbox.png'
          #   save_image(Image.fromarray(img1_box), output_folder, mask_filename)
         #'B/L', 'POL', 'POD', 'Vessel', 'Peso', 'Voyage'
+        
+        # Crear un conjunto (set) de etiquetas existentes en resultados_lista
+        etiquetas_existentes = {etiqueta for etiqueta, valor in resultados_lista}
+
+        # Recorrer las palabras clave y agregar las que no existen en resultados_lista
+        for palabra, etiqueta in palabras_clave.items():
+            if etiqueta not in etiquetas_existentes:
+                resultados_lista.append((etiqueta, 'No encontrado'))
+
+        # Imprime la tupla de etiquetas y texto
+        print(resultados_lista)
 
         # Mapeo de etiquetas a variables
         column_mapping = {
-            'B/L': '',
-            'POL': '',
-            'POD': '',
+            'codigoBL': '',
+            'puertoEmbarque': '',
+            'puertoDescarga': '',
             'Vessel': '',
-            'Peso': '',
+            'pesoBruto': '',
             'Voyage': ''
         }
 
@@ -317,8 +345,8 @@ def select_pdf_and_classify(file):
 
         # Construye la consulta
         query = f"INSERT INTO bl (nro_bl, puerto_de_carga, puerto_de_descarga, vessel, peso, no_voyage) " \
-                f"VALUES ('{column_mapping['B/L']}', '{column_mapping['POL']}', '{column_mapping['POD']}', " \
-                f"'{column_mapping['Vessel']}', '{column_mapping['Peso']}', '{column_mapping['Voyage']}');"
+                f"VALUES ('{column_mapping['codigoBL']}', '{column_mapping['puertoEmbarque']}', '{column_mapping['puertoDescarga']}', " \
+                f"'{column_mapping['Vessel']}', '{column_mapping['pesoBruto']}', '{column_mapping['Voyage']}');"
 
         # Ejecuta la consulta
         cur.execute(query)
@@ -331,8 +359,17 @@ def select_pdf_and_classify(file):
         for row in rows:
             print(row)
     
+    elif class_labels[class_label] == 'Certificado Origen':
+        print('Certificado Origen')
+
     elif class_labels[class_label] == 'Factura':
         print('Factura')
+
+    elif class_labels[class_label] == 'Packing List':
+        print('Packing List')
+
+    elif class_labels[class_label] == 'Seguro':
+        print('Seguro')
 
     else:
         print('Información no disponible')
