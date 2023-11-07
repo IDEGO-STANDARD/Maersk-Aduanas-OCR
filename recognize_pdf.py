@@ -149,11 +149,7 @@ palabras_clave = {
     '000000013x' : 'handlingDestin',
     '000000014x' : 'portDues',
     '000000015x' : 'codigoBLMaster',
-    '000000016x' : 'ETA',
-    'Voyage No.' : 'Voyage',
-    'VOYAGE NO.' : 'Voyage',
-    'Vessel': 'Vessel',
-    'VESSEL' : 'Vessel'
+    '000000016x' : 'ETA'
 }
 
 etiquetas_y_textos = {}
@@ -268,7 +264,7 @@ def select_pdf_and_classify(file):
 
             # Comprueba si 'texto' está vacío o es None y asigna "No encontrado" en su lugar
             if texto is None or texto == "":
-                texto = "No encontrado"
+                texto = None
 
             # Imprime las etiquetas y el texto
             etiquetas_str = ', '.join(etiquetas)
@@ -323,7 +319,7 @@ def select_pdf_and_classify(file):
         # Recorrer las palabras clave y agregar las que no existen en resultados_lista
         for palabra, etiqueta in palabras_clave.items():
             if etiqueta not in etiquetas_existentes:
-                resultados_lista.append((etiqueta, 'No encontrado'))
+                resultados_lista.append((etiqueta, None))
 
         # Imprime la tupla de etiquetas y texto
         print(resultados_lista)
@@ -378,15 +374,19 @@ def select_pdf_and_classify(file):
     cur.close()
     conn.close()
 
-    return class_labels[class_label], resultados_lista
+    resultados_dic = dict(resultados_lista)
+    # Ejemplo:
+    print(resultados_dic['codigoBL'])
+    print(resultados_dic['pesoBruto']) 
+
+    return class_labels[class_label], resultados_dic
     
 @app.route('/recognize-pdf', methods = ['POST'])
 def recognize_pdf():
     f = request.files['file']
-    result_label, resultados_lista = select_pdf_and_classify(f)
-
-    return {'type': result_label, 'resultados': resultados_lista}
-
+    result_label, resultados_dic= select_pdf_and_classify(f)
+    return {'type': result_label, 'resultados': resultados_dic}
 
 if __name__ == "__main__":
     app.run(debug=True)
+    
