@@ -17,7 +17,7 @@ app = Flask(__name__)
 nltk.download('punkt')
 
 # Cargar el modelo entrenado
-model = tf.keras.models.load_model('documento_classifier_model.h5')
+model = tf.keras.models.load_model('documento_classifier_model3.h5')
 
 # Funciones clasificador
 # Función para redimensionar una imagen a 224x224 píxeles
