@@ -152,6 +152,45 @@ palabras_clave = {
     '000000016x' : 'ETA'
 }
 
+palabras_clave_Factura = {
+    'INVOICE NO.:': 'numeroFactura',
+    'DATE:': 'fecha',
+    'DATE :': 'fecha',
+    'AMOUNT': 'tipoMoneda',
+    'USD': 'tipoMoneda',
+    '000000x001x': 'montoTotal',
+    '000000x002x': 'idOrdenT',
+    '000000x003x': 'insurance',
+    '000000x004x': 'incoterm',
+    '000000x005x': 'emisor',
+    '000000x006x': 'receptor',
+    '000000x007x': 'puerto',
+    '000000x008x': 'unidadesComerciales',
+    '000000x009x': 'nroItems',
+    '000000x010x': 'paisOrigen',
+    '000000x011x': 'unidades',
+    '000000x012x': 'descripcion',
+    '000000x013x': 'monto',
+    '000000x014x': 'cantidad',
+    '000000x015x': 'precioUnitario',
+    '000000x016x': 'precioTotal'
+}
+
+palabras_clave_CO = {
+    'Departure Date:': 'departureDate',
+    'Port of loading:': 'portLoading',
+    'Port of discharge:' : 'portDischarge',
+}
+
+palabras_clave_PL = {
+    'Peso Neto:' : 'pesoNeto'
+
+}
+
+palabras_clave_Seguro = {
+    'Prima:' : 'primaNeta'
+}
+
 etiquetas_y_textos = {}
 resultados = {}
 etiquetas_str = {}
@@ -166,6 +205,11 @@ palabras_claves_a_eliminar = ['Bill of Lading', 'B/L No', 'B/LNo.', 'BILL OF LAD
     'Port of Discharge', 'PORT OF LOADING', 'PORT OF DISCHARGE', 'Voyage No.', 'VOYAGE NO.', 'Vessel', 'VESSEL', 'Weight',
     'GROSS WEIGHT (KGS)', '(see clauses 1 + 19)', '(see clause 1 + 19)']
 
+palabras_claves_a_eliminar_Factura = ['INVOICE NO.:', 'DATE:', 'AMOUNT','UNIT PRICE', 'CBM', 'PC', 'DATE :']
+palabras_claves_a_eliminar_CO = ['Departure Date:', 'Port of loading:', 'Port of discharge:','Vessel/Flight/Train/Vehicle No.:']
+palabras_claves_a_eliminar_PL = ['Peso Neto:']
+palabras_claves_a_eliminar_Seguro = ['Prima:']
+
 def es_bl(palabra):
     # Usar una expresión regular para buscar una secuencia de 7 a 13 caracteres alfanuméricos
     patron = r'\b[a-zA-Z0-9]{7,13}\b'
@@ -173,6 +217,16 @@ def es_bl(palabra):
 
 # Función para seleccionar un archivo PDF y realizar la clasificación
 def select_pdf_and_classify(file):
+
+    etiquetas_y_textos = {}
+    resultados = {}
+    etiquetas_str = {}
+    texto = {}
+    resultados_lista = []
+    # Crear dos listas para almacenar coordenadas y texto
+    coordenadas_lista = []
+    texto_lista = []
+    texto_lista_box = {}
 
     # Parámetros de conexión a nuestra base de datos maersk-aduanas
     DATABASE = 'postgres'
@@ -255,8 +309,8 @@ def select_pdf_and_classify(file):
                             etiquetas_encontradas = etiquetas_y_textos[key][0]  # Obtiene las etiquetas correspondientes
                             texto_lista_box[key] = (etiquetas_encontradas, coordenadas_box)
                     
-        print(etiquetas_y_textos)
-        print(texto_lista_box)
+        # print(etiquetas_y_textos)
+        # print(texto_lista_box)
         # Procesa textos eliminando palabras clave y muestra etiquetas y textos
         for key, (etiquetas, texto) in etiquetas_y_textos.items():
             for palabra_clave in palabras_claves_a_eliminar:
@@ -357,15 +411,207 @@ def select_pdf_and_classify(file):
     
     elif class_labels[class_label] == 'Certificado Origen':
         print('Certificado Origen')
+        for key, texto in textos_de_cajas.items():
+            if len(texto) <= 50:
+                etiquetas_encontradas = []  # Lista de etiquetas para este resultado
+
+                for palabra_clave, etiqueta in palabras_clave_CO.items():
+                    if palabra_clave in texto:
+                        etiquetas_encontradas.append(etiqueta)
+
+                if etiquetas_encontradas:
+                    # Si se encontraron etiquetas, agrega el texto al diccionario
+                    etiquetas_y_textos[key] = (etiquetas_encontradas, texto)
+                    # Busca el diccionario correspondiente en coordenadas_lista
+                    for coord_dict in coordenadas_lista:
+                        if key in coord_dict:
+                            coordenadas_box = coord_dict[key]
+                            etiquetas_encontradas = etiquetas_y_textos[key][0]  # Obtiene las etiquetas correspondientes
+                            texto_lista_box[key] = (etiquetas_encontradas, coordenadas_box)
+                    
+        #print(etiquetas_y_textos)
+        #print(texto_lista_box)
+        # Procesa textos eliminando palabras clave y muestra etiquetas y textos
+        for key, (etiquetas, texto) in etiquetas_y_textos.items():
+            for palabra_clave in palabras_claves_a_eliminar_CO:
+                texto = texto.replace(palabra_clave, '').strip()
+
+            # Comprueba si 'texto' está vacío o es None y asigna "No encontrado" en su lugar
+            if texto is None or texto == "":
+                texto = None
+
+            # Imprime las etiquetas y el texto
+            etiquetas_str = ', '.join(etiquetas)
+
+            resultados = (etiquetas_str, texto)
+            resultados_lista.append(resultados)
+
+            # Imprime la tupla de etiquetas y texto
+            print(resultados)
+
+        # Crear un conjunto (set) de etiquetas existentes en resultados_lista
+        etiquetas_existentes = {etiqueta for etiqueta, valor in resultados_lista}
+
+        # Recorrer las palabras clave y agregar las que no existen en resultados_lista
+        for palabra, etiqueta in palabras_clave_CO.items():
+            if etiqueta not in etiquetas_existentes:
+                resultados_lista.append((etiqueta, None))
+
+        # Imprime la tupla de etiquetas y texto
+        print(resultados_lista)
 
     elif class_labels[class_label] == 'Factura':
         print('Factura')
+        for key, texto in textos_de_cajas.items():
+            if len(texto) <= 30:
+                etiquetas_encontradas = []  # Lista de etiquetas para este resultado
+
+                for palabra_clave, etiqueta in palabras_clave_Factura.items():
+                    if palabra_clave in texto:
+                        etiquetas_encontradas.append(etiqueta)
+
+                if etiquetas_encontradas:
+                    # Si se encontraron etiquetas, agrega el texto al diccionario
+                    etiquetas_y_textos[key] = (etiquetas_encontradas, texto)
+                    # Busca el diccionario correspondiente en coordenadas_lista
+                    for coord_dict in coordenadas_lista:
+                        if key in coord_dict:
+                            coordenadas_box = coord_dict[key]
+                            etiquetas_encontradas = etiquetas_y_textos[key][0]  # Obtiene las etiquetas correspondientes
+                            texto_lista_box[key] = (etiquetas_encontradas, coordenadas_box)
+                    
+        #print(etiquetas_y_textos)
+        #print(texto_lista_box)
+        # Procesa textos eliminando palabras clave y muestra etiquetas y textos
+        for key, (etiquetas, texto) in etiquetas_y_textos.items():
+            for palabra_clave in palabras_claves_a_eliminar_Factura:
+                texto = texto.replace(palabra_clave, '').strip()
+
+            # Comprueba si 'texto' está vacío o es None y asigna "No encontrado" en su lugar
+            if texto is None or texto == "":
+                texto = None
+
+            # Imprime las etiquetas y el texto
+            etiquetas_str = ', '.join(etiquetas)
+
+            resultados = (etiquetas_str, texto)
+            resultados_lista.append(resultados)
+
+            # Imprime la tupla de etiquetas y texto
+            print(resultados)
+
+        # Crear un conjunto (set) de etiquetas existentes en resultados_lista
+        etiquetas_existentes = {etiqueta for etiqueta, valor in resultados_lista}
+        
+        # Recorrer las palabras clave y agregar las que no existen en resultados_lista
+        for palabra, etiqueta in palabras_clave_Factura.items():
+            if etiqueta not in etiquetas_existentes:
+                resultados_lista.append((etiqueta, None))
+
+        # Imprime la tupla de etiquetas y texto
+        print(resultados_lista)
 
     elif class_labels[class_label] == 'Packing List':
         print('Packing List')
+        for key, texto in textos_de_cajas.items():
+            if len(texto) <= 50:
+                etiquetas_encontradas = []  # Lista de etiquetas para este resultado
+
+                for palabra_clave, etiqueta in palabras_clave_PL.items():
+                    if palabra_clave in texto:
+                        etiquetas_encontradas.append(etiqueta)
+
+                if etiquetas_encontradas:
+                    # Si se encontraron etiquetas, agrega el texto al diccionario
+                    etiquetas_y_textos[key] = (etiquetas_encontradas, texto)
+                    # Busca el diccionario correspondiente en coordenadas_lista
+                    for coord_dict in coordenadas_lista:
+                        if key in coord_dict:
+                            coordenadas_box = coord_dict[key]
+                            etiquetas_encontradas = etiquetas_y_textos[key][0]  # Obtiene las etiquetas correspondientes
+                            texto_lista_box[key] = (etiquetas_encontradas, coordenadas_box)
+                    
+        #print(etiquetas_y_textos)
+        #print(texto_lista_box)
+        # Procesa textos eliminando palabras clave y muestra etiquetas y textos
+        for key, (etiquetas, texto) in etiquetas_y_textos.items():
+            for palabra_clave in palabras_claves_a_eliminar_PL:
+                texto = texto.replace(palabra_clave, '').strip()
+
+            # Comprueba si 'texto' está vacío o es None y asigna "No encontrado" en su lugar
+            if texto is None or texto == "":
+                texto = None
+
+            # Imprime las etiquetas y el texto
+            etiquetas_str = ', '.join(etiquetas)
+
+            resultados = (etiquetas_str, texto)
+            resultados_lista.append(resultados)
+
+            # Imprime la tupla de etiquetas y texto
+            print(resultados)
+
+        # Crear un conjunto (set) de etiquetas existentes en resultados_lista
+        etiquetas_existentes = {etiqueta for etiqueta, valor in resultados_lista}
+
+        # Recorrer las palabras clave y agregar las que no existen en resultados_lista
+        for palabra, etiqueta in palabras_clave_PL.items():
+            if etiqueta not in etiquetas_existentes:
+                resultados_lista.append((etiqueta, None))
+
+        # Imprime la tupla de etiquetas y texto
+        print(resultados_lista)
 
     elif class_labels[class_label] == 'Seguro':
         print('Seguro')
+        for key, texto in textos_de_cajas.items():
+            if len(texto) <= 30:
+                etiquetas_encontradas = []  # Lista de etiquetas para este resultado
+
+                for palabra_clave, etiqueta in palabras_clave_Seguro.items():
+                    if palabra_clave in texto:
+                        etiquetas_encontradas.append(etiqueta)
+
+                if etiquetas_encontradas:
+                    # Si se encontraron etiquetas, agrega el texto al diccionario
+                    etiquetas_y_textos[key] = (etiquetas_encontradas, texto)
+                    # Busca el diccionario correspondiente en coordenadas_lista
+                    for coord_dict in coordenadas_lista:
+                        if key in coord_dict:
+                            coordenadas_box = coord_dict[key]
+                            etiquetas_encontradas = etiquetas_y_textos[key][0]  # Obtiene las etiquetas correspondientes
+                            texto_lista_box[key] = (etiquetas_encontradas, coordenadas_box)
+                    
+        #print(etiquetas_y_textos)
+        #print(texto_lista_box)
+        # Procesa textos eliminando palabras clave y muestra etiquetas y textos
+        for key, (etiquetas, texto) in etiquetas_y_textos.items():
+            for palabra_clave in palabras_claves_a_eliminar_Seguro:
+                texto = texto.replace(palabra_clave, '').strip()
+
+            # Comprueba si 'texto' está vacío o es None y asigna "No encontrado" en su lugar
+            if texto is None or texto == "":
+                texto = None
+
+            # Imprime las etiquetas y el texto
+            etiquetas_str = ', '.join(etiquetas)
+
+            resultados = (etiquetas_str, texto)
+            resultados_lista.append(resultados)
+
+            # Imprime la tupla de etiquetas y texto
+            print(resultados)
+
+        # Crear un conjunto (set) de etiquetas existentes en resultados_lista
+        etiquetas_existentes = {etiqueta for etiqueta, valor in resultados_lista}
+
+        # Recorrer las palabras clave y agregar las que no existen en resultados_lista
+        for palabra, etiqueta in palabras_clave_Seguro.items():
+            if etiqueta not in etiquetas_existentes:
+                resultados_lista.append((etiqueta, None))
+
+        # Imprime la tupla de etiquetas y texto
+        print(resultados_lista)
 
     else:
         print('Información no disponible')
@@ -376,8 +622,8 @@ def select_pdf_and_classify(file):
 
     resultados_dic = dict(resultados_lista)
     # Ejemplo:
-    print(resultados_dic['codigoBL'])
-    print(resultados_dic['pesoBruto']) 
+    # print(resultados_dic['tipoMoneda'])
+    # print(resultados_dic['pesoBruto']) 
 
     return class_labels[class_label], resultados_dic
     
