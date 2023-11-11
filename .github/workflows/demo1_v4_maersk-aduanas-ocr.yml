@@ -70,3 +70,5 @@ jobs:
           app-name: 'maersk-aduanas-ocr'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_BE367ED56E9B457396868BAD8ACF2B9B }}
+          # Añadido KUDU_EXTENSION_VERSION
+          KUDU_EXTENSION_VERSION: '78.11002.3584'
